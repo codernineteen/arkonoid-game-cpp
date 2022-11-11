@@ -54,6 +54,7 @@ private :
 	float					m_velocity_x;
 	float					m_velocity_z;
 	bool					isHittedBall = false; // 민병록이 생성.
+	bool					isPropBall = false;
 
 public:
     CSphere(void)
@@ -68,6 +69,12 @@ public:
     ~CSphere(void) {}
 
 public:
+	void setIsPropBall() {
+		this->isPropball = true;
+	}
+	void getIsPropBall() {
+		return this->isPropBall;
+	}
 	void setIsHittedBall() { // 민병록이 생성
 		this->isHittedBall = true;
 	}
@@ -119,7 +126,7 @@ public:
 		return false;
 	}
 	
-	void hitBy(CSphere& ball) 
+	bool hitBy(CSphere& ball) 
 	{ 
 		// Insert your code here.
 		if (hasIntersected(ball)) {
@@ -133,11 +140,12 @@ public:
 
 			ball.setPower(scale * deltaX, scale * deltaZ);
 
-			//..?
+			if (!this->getIsPropBall())
+				this->setCenter(-4.56f, 1.5f, 0.0f);
 
-
-			
+			return true;
 		}
+		return false;
 	}
 
 	void ballUpdate(float timeDiff) 
