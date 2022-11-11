@@ -1,0 +1,11 @@
+﻿cl : command line  warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  virtualLego.cpp
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\d3dUtility.h(23,1): warning C4005: 'INFINITY': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_math.h(88): message : see previous definition of 'INFINITY'
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\virtualLego.cpp(116,1): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\virtualLego.cpp(152,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\virtualLego.cpp(153,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\virtualLego.cpp(263,33): warning C4305: 'return': truncation from 'double' to 'float'
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\virtualLego.cpp(588,18): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\virtualLego.cpp(589,18): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  VirtualLego.vcxproj -> C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\Debug\VirtualLego.exe
