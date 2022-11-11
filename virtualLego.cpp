@@ -578,27 +578,33 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 	
 		case VK_LEFT:
-			if (isGameStarted)
+			if (current_center_white.z >= -2.8)
 			{
-				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z - 0.2);
-			}
-			else 
-			{
-				//게임이 시작하지 않았으면 plate를 따라서 z값을 같이 움직임
-				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z - 0.2);
-				g_target_blueball.setCenter(current_center_blue.x, current_center_blue.y, current_center_white.z - 0.2);
+				if (isGameStarted)
+				{
+					g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z - 0.2);
+				}
+				else
+				{
+					//게임이 시작하지 않았으면 plate를 따라서 z값을 같이 움직임
+					g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z - 0.2);
+					g_target_blueball.setCenter(current_center_blue.x, current_center_blue.y, current_center_white.z - 0.2);
+				}
 			}
 			break;
 
 		case VK_RIGHT:
-			if (isGameStarted)
+			if (current_center_white.z <= 2.8)
 			{
-				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z + 0.2);
-			}
-			else
-			{
-				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z + 0.2);
-				g_target_blueball.setCenter(current_center_blue.x, current_center_blue.y, current_center_white.z + 0.2);
+				if (isGameStarted)
+				{
+					g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z + 0.2);
+				}
+				else
+				{
+					g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z + 0.2);
+					g_target_blueball.setCenter(current_center_blue.x, current_center_blue.y, current_center_white.z + 0.2);
+				}
 			}
 			break;
 
