@@ -527,6 +527,7 @@ bool Display(float timeDelta)
 		{
 			g_targetBall[k].draw(Device, g_mWorld);
 		}
+
 		g_target_blueball.ballUpdate(timeDelta);
 		g_target_blueball.draw(Device, g_mWorld);
 		g_plate_whiteball.draw(Device, g_mWorld);
@@ -546,8 +547,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static int old_y = 0;
 	static enum { WORLD_MOVE, LIGHT_MOVE, BLOCK_MOVE } move = WORLD_MOVE;
 	static const double VELOCITY = -2; //속도 설정
+	static bool isGameStarted = false; //게임 시작 판정
 
-	D3DXVECTOR3 current_center = g_plate_whiteball.getCenter(); // 현재 받침 공 위치 받아오기
+	D3DXVECTOR3 current_center_white = g_plate_whiteball.getCenter(); // 현재 받침 공 위치 받아오기
+	D3DXVECTOR3 current_center_blue = g_target_blueball.getCenter(); // 현재 움직여야할 공 위치 받아오기
 
 	switch (msg) {
 	case WM_DESTROY:
@@ -570,15 +573,33 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_SPACE:
+			isGameStarted = true;
 			g_target_blueball.setPower(VELOCITY, 0); // 속도 업데이트
 			break;
 	
 		case VK_LEFT:
-			g_plate_whiteball.setCenter(current_center.x, current_center.y, current_center.z - 0.2);
+			if (isGameStarted)
+			{
+				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z - 0.2);
+			}
+			else 
+			{
+				//게임이 시작하지 않았으면 plate를 따라서 z값을 같이 움직임
+				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z - 0.2);
+				g_target_blueball.setCenter(current_center_blue.x, current_center_blue.y, current_center_white.z - 0.2);
+			}
 			break;
 
 		case VK_RIGHT:
-			g_plate_whiteball.setCenter(current_center.x, current_center.y, current_center.z + 0.2);
+			if (isGameStarted)
+			{
+				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z + 0.2);
+			}
+			else
+			{
+				g_plate_whiteball.setCenter(current_center_white.x, current_center_white.y, current_center_white.z + 0.2);
+				g_target_blueball.setCenter(current_center_blue.x, current_center_blue.y, current_center_white.z + 0.2);
+			}
 			break;
 
 		}
