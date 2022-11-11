@@ -1,2 +1,0 @@
-C:\Users\junsb\OneDrive\바탕 화면\과제\oop16_proj3\Debug\VirtualLego.exe
-C:\Users\junsb\OneDrive\바탕 화면\oop16_proj3\Debug\VirtualLego.exe
