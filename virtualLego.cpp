@@ -52,7 +52,6 @@ const float spherePos[60][2] = {
 	{-0.28,0.42} , {-0.28,0.84} , {-0.28, 1.26} , {-0.28, 1.68},
 	{-0.28,-0.42} , {-0.28,-0.84} , {-0.28,-1.26} , {-0.28, -1.68}
 }; 
-// const float targetPos[54][2]; // 부셔야되는 벽돌 공 위치
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[3] = {d3d::RED, d3d::YELLOW, d3d::WHITE};
 
@@ -160,16 +159,16 @@ public:
 			else if(tZ <= (-3 + M_RADIUS))
 				tZ = -3 + M_RADIUS;
 			else if(tZ >= (3 - M_RADIUS))
-				tZ = 3 - M_RADIUS;*/
-			
+				tZ = 3 - M_RADIUS;
+			*/
 			this->setCenter(tX, cord.y, tZ);
 		}
 		else { this->setPower(0,0);}
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
+		/*double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
-			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+			rate = 0;*/
+		this->setPower(getVelocity_X(), getVelocity_Z() );
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -267,15 +266,38 @@ public:
 		m_pBoundMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball) 
-	{
-		// Insert your code here.
-		return false;
-	}
+	//bool hasIntersected(CSphere& ball) 
+	//{
+	//	// Insert your code here.
+	//	D3DXVECTOR3 current_ball_pos = ball.getCenter();
+	//	if ((current_ball_pos.z + 0.21) >= (m_width / 2) || (current_ball_pos.z - 0.21) <= -1*(m_width/2))
+	//	{
+	//		return true;
+	//	}
+
+	//	if ((current_ball_pos.x + 0.21) >= (m_height / 2))
+	//	{
+	//		return true;
+	//	}
+
+	//	return false;
+	//}
 
 	void hitBy(CSphere& ball) 
 	{
-		// Insert your code here.
+		D3DXVECTOR3 current_ball_pos = ball.getCenter();
+		double current_velocity_z = ball.getVelocity_Z();
+		double current_velocity_x = ball.getVelocity_X();
+
+		if ((current_ball_pos.z + 0.21) >= 2.8 || (current_ball_pos.z - 0.21) <= -2.8)
+		{
+			ball.setPower(current_velocity_x*-1, current_velocity_z);
+		}
+
+		if ((current_ball_pos.x + 0.21) >= 4.5)
+		{
+			ball.setPower(current_velocity_x, current_velocity_z*-1);
+		}
 	}    
 	
 	void setPosition(float x, float y, float z)
@@ -498,9 +520,6 @@ void Cleanup(void)
 // 런타임
 bool Display(float timeDelta)
 {
-	int i=0;
-	int j = 0;
-
 
 	if( Device )
 	{
@@ -508,18 +527,27 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 		
 
-		// check whether any two balls hit together and update the direction of balls
-		for(i = 0 ;i < 4; i++){
-			for(j = 0 ; j < 4; j++) {
-				if(i >= j) {continue;}
-				g_targetBall[i].hitBy(g_targetBall[j]);
-			}
+		g_target_blueball.ballUpdate(timeDelta);
+		D3DXVECTOR3 current_ball_pos = g_target_blueball.getCenter();
+		double current_velocity_z = g_target_blueball.getVelocity_Z();
+		double current_velocity_x = g_target_blueball.getVelocity_X();
+
+		if ((current_ball_pos.z + 0.21) >= 2.8 || (current_ball_pos.z - 0.21) <= -2.8)
+		{
+			g_target_blueball.setPower(current_velocity_x, current_velocity_z * -1);
 		}
+
+		if ((current_ball_pos.x - 0.21) <= -4.1)
+		{
+			g_target_blueball.setPower(current_velocity_x * -1, current_velocity_z);
+		}
+	
+
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
 
-		for (i=0;i<4;i++) 	{
+		for (int i=0; i<4; i++) 	{
 			g_legowall[i].draw(Device, g_mWorld);
 		}
 
@@ -528,7 +556,6 @@ bool Display(float timeDelta)
 			g_targetBall[k].draw(Device, g_mWorld);
 		}
 
-		g_target_blueball.ballUpdate(timeDelta);
 		g_target_blueball.draw(Device, g_mWorld);
 		g_plate_whiteball.draw(Device, g_mWorld);
 		
@@ -574,7 +601,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_SPACE:
 			isGameStarted = true;
-			g_target_blueball.setPower(VELOCITY, 0); // 속도 업데이트
+			g_target_blueball.setPower(VELOCITY, VELOCITY); // 속도 업데이트
 			break;
 	
 		case VK_LEFT:
