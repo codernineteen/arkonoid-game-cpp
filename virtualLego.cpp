@@ -17,6 +17,8 @@
 #include <cstdio>
 #include <cassert>
 
+#define BallNum 60 //병록 추가 변수
+
 IDirect3DDevice9* Device = NULL;
 
 // window size 창 크기
@@ -26,7 +28,7 @@ const int Height = 720;
 // There are four balls: 공 위치 배열
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
-// const float targetPos[54][2]; // 부셔야 되는 벽돌 공 위치
+const float targetPos[54][2] = {}; // 부셔야 되는 벽돌 공 위치
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE};
 
@@ -54,6 +56,7 @@ private :
 	float					m_velocity_x;
 	float					m_velocity_z;
 	bool					isHittedBall = false; // 민병록이 생성.
+	bool					isPropBall = false;
 
 public:
     CSphere(void)
@@ -68,6 +71,12 @@ public:
     ~CSphere(void) {}
 
 public:
+	void setIsPropBall() {
+		this->isPropBall = true;
+	}
+	bool getIsPropBall() {
+		return this->isPropBall;
+	}
 	void setIsHittedBall() { // 민병록이 생성
 		this->isHittedBall = true;
 	}
@@ -111,15 +120,21 @@ public:
     bool hasIntersected(CSphere& ball) 
 	{
 		// Insert your code here.
-		float distance = 0;
-		distance = sqrt((this->center_x - ball.center_x) * (this->center_x - ball.center_x) + (this->center_z - ball.center_z) * (this->center_z - ball.center_z));
+		D3DXVECTOR3 vDiff;
 
-		if (distance <= ball.m_radius) return true;
+		if (this == &ball)
+			return false;
+
+		vDiff = this->getCenter() - ball.getCenter();
+		const float distacne = D3DXVec3Length(&vDiff);
+
+		if (distacne <= this->getRadius() + ball.getRadius())
+			return true;
 
 		return false;
 	}
 	
-	void hitBy(CSphere& ball) 
+	bool hitBy(CSphere& ball) 
 	{ 
 		// Insert your code here.
 		if (hasIntersected(ball)) {
@@ -133,11 +148,12 @@ public:
 
 			ball.setPower(scale * deltaX, scale * deltaZ);
 
-			//..?
+			if (!this->getIsPropBall())
+				this->setCenter(-4.56f, 1.5f, 0.0f);
 
-
-			
+			return true;
 		}
+		return false;
 	}
 
 	void ballUpdate(float timeDiff) 
@@ -153,21 +169,22 @@ public:
 			float tZ = cord.z + TIME_SCALE*timeDiff*m_velocity_z;
 
 			//correction of position of ball
-			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-			/*if(tX >= (4.5 - M_RADIUS))
+			// 공이 벽에 부딪힐 때 공의 위치 수정이 필요하기 때문에 이 부분의 주석을 제거해주세요.
+			// 제거함
+			if(tX >= (4.5 - M_RADIUS))
 				tX = 4.5 - M_RADIUS;
 			else if(tX <=(-4.5 + M_RADIUS))
 				tX = -4.5 + M_RADIUS;
 			else if(tZ <= (-3 + M_RADIUS))
 				tZ = -3 + M_RADIUS;
 			else if(tZ >= (3 - M_RADIUS))
-				tZ = 3 - M_RADIUS;*/
+				tZ = 3 - M_RADIUS;
 			
 			this->setCenter(tX, cord.y, tZ);
 		}
 		else { this->setPower(0,0);}
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
+		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
@@ -242,7 +259,7 @@ public:
         m_mtrl.Diffuse  = color;
         m_mtrl.Specular = color;
         m_mtrl.Emissive = d3d::BLACK;
-        m_mtrl.Power    = 20.0f; // 민병록이 수정
+        m_mtrl.Power    = 5.0f;
 		
         m_width = iwidth;
         m_depth = idepth;
@@ -271,15 +288,21 @@ public:
 	bool hasIntersected(CSphere& ball) 
 	{
 		// Insert your code here.
-		float right_wall_x = m_x + m_width / 2;
-		float left_wall_x = m_x - m_width / 2;
-		float top_wall_z = m_z + m_height / 2;
-		float bottom_wall_z = m_z - m_height / 2;
-
-		D3DXVECTOR3 temp = ball.getCenter();
-
-		if (temp.x == right_wall_x || temp.x == left_wall_x || temp.z == top_wall_z || temp.z == bottom_wall_z) return true;
-
+		// Insert your code here.
+		if (ball.getIsHittedBall()) {
+			if ((int)this->m_x == 0) {
+				const float distanceZ = abs(ball.getCenter().z - this->m_z);
+				if (distanceZ - this->m_depth / 2 <= ball.getRadius()) {
+					return true;
+				}
+			}
+			else if ((int)this->m_z == 0) {
+				const float distanceX = abs(this->m_x - ball.getCenter().x);
+				if (distanceX - this->m_width / 2 <= ball.getRadius()) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 
@@ -287,7 +310,7 @@ public:
 	{
 		// Insert your code here.
 		// 진행 방향의 반대로 공을 보냄.
-		//왼쪽, 오른쪽 벽은 X좌표를 & 위쪽 벽은 x좌표를 바꿔줘야 한다. 
+		// 왼쪽, 오른쪽 벽은 X좌표를 & 위쪽 벽은 x좌표를 바꿔줘야 한다. 
 		if (hasIntersected(ball)) {
 			if (this->m_x == 0) {
 				float deltaZ = ball.getVelocity_Z() - this->m_z;
@@ -297,7 +320,6 @@ public:
 			else {
 				float deltaVelocityVector = sqrt(ball.getVelocity_X() * ball.getVelocity_X() + ball.getVelocity_Z() * ball.getVelocity_Z());
 				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
-				return;
 			}
 		}
 	}    
@@ -419,7 +441,10 @@ CWall	g_legowall[4];
 CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
-
+CSphere	g_hitterBall;
+CSphere	g_propBall;
+bool gameStart = false;
+int brokenBallNum = 0;
 double g_camera_pos[3] = {0.0, 5.0, -8.0};
 
 // -----------------------------------------------------------------------------
@@ -435,36 +460,54 @@ void destroyAllLegoBlock(void)
 bool Setup()
 {
 	int i;
-	
-    D3DXMatrixIdentity(&g_mWorld);
-    D3DXMatrixIdentity(&g_mView);
-    D3DXMatrixIdentity(&g_mProj);
-		
+
+	D3DXMatrixIdentity(&g_mWorld);
+	D3DXMatrixIdentity(&g_mView);
+	D3DXMatrixIdentity(&g_mProj);
+
 	// create plane and set the position
-    if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
-    g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-	
+	if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
+	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+
 	// create walls and set the position. note that there are four walls
 	if (false == g_legowall[0].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
 	g_legowall[0].setPosition(0.0f, 0.12f, 3.06f);
 	if (false == g_legowall[1].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
 	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
+	g_legowall[2].setPosition(-4.56f, 0.12f, 0.0f);
 	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
+	g_legowall[3].setPosition(4.56f, 0.12f, 0.0f);
 
 	// create four balls and set the position
-	for (i=0;i<4;i++) {
-		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
-		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
-		g_sphere[i].setPower(0,0);
+	float spherePos[BallNum][2] = {};
+	int posIdx = 0;
+	float row = 2.8;
+	float column = -4.35;
+	for (i = 0; i < 10; i++) {
+		column = -4.35;
+		for (int j = 0; j < 6; j++) {
+			spherePos[posIdx][0] = column;
+			spherePos[posIdx++][1] = row;
+			column += 0.8;
+		}
+		row -= 0.6;
 	}
-	
-	// create blue ball for set direction
-    if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS , .0f);
-	
+
+	for (i = 0; i < BallNum; i++) {
+		if (false == g_sphere[i].create(Device, d3d::YELLOW)) return false;
+		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
+		g_sphere[i].setPower(0, 0);
+	}
+	if (false == g_hitterBall.create(Device, d3d::RED)) return false;
+	g_hitterBall.setCenter(3.72f, (float)M_RADIUS, 0.0f);
+	g_hitterBall.setIsHittedBall();
+
+	if (false == g_propBall.create(Device, d3d::BLACK)) return false;
+	g_propBall.setCenter(4.35f, (float)M_RADIUS, 0.0f);
+	g_propBall.setPower(0, 0);
+	g_propBall.setIsPropBall();
+
 	// light setting 
     D3DLIGHT9 lit;
     ::ZeroMemory(&lit, sizeof(lit));
@@ -530,12 +573,19 @@ bool Display(float timeDelta)
 			g_sphere[i].ballUpdate(timeDelta);
 			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
 		}
-
-		// check whether any two balls hit together and update the direction of balls
-		for(i = 0 ;i < 4; i++){
-			for(j = 0 ; j < 4; j++) {
-				if(i >= j) {continue;}
-				g_sphere[i].hitBy(g_sphere[j]);
+		//병록 수정
+		g_hitterBall.ballUpdate(timeDelta);
+		for (j = 0; j < 3; j++) {
+			g_legowall[j].hitBy(g_hitterBall);
+		}
+		if (g_legowall[3].hasIntersected(g_hitterBall) || brokenBallNum == BallNum) {
+			gameStart = false;
+			brokenBallNum = 0;
+			g_hitterBall.setPower(0, 0);
+			if (!Setup())
+			{
+				::MessageBox(0, "Setup() - FAILED", 0, 0);
+				return false;
 			}
 		}
 

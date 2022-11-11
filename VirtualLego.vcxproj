@@ -133,9 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="d3dUtility.cpp" />
-    <ClCompile Include="virtualLego.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="virtualLego.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dUtility.h" />
