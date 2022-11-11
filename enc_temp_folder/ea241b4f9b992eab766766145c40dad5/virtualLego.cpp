@@ -20,8 +20,8 @@
 IDirect3DDevice9* Device = NULL;
 
 // window size 창 크기
-const int Width = 480;
-const int Height = 720;
+const int Width = 1024;
+const int Height = 800;
 
 // There are four balls: 공 위치 배열
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
@@ -297,7 +297,6 @@ public:
 			else {
 				float deltaVelocityVector = sqrt(ball.getVelocity_X() * ball.getVelocity_X() + ball.getVelocity_Z() * ball.getVelocity_Z());
 				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
-				return;
 			}
 		}
 	}    
@@ -481,7 +480,7 @@ bool Setup()
         return false;
 	
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(5.0f, 14.0f, 0.0f);
+	D3DXVECTOR3 pos(5.0f, 13.0f, 0.0f);
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
