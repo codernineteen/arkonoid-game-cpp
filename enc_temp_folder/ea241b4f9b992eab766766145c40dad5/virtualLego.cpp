@@ -297,7 +297,6 @@ public:
 			else {
 				float deltaVelocityVector = sqrt(ball.getVelocity_X() * ball.getVelocity_X() + ball.getVelocity_Z() * ball.getVelocity_Z());
 				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
-				return;
 			}
 		}
 	}    
