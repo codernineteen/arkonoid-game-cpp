@@ -19,19 +19,21 @@
 
 IDirect3DDevice9* Device = NULL;
 
-// window size
-const int Width  = 512;
-const int Height = 1024;
+// window size 창 크기
+const int Width = 1024;
+const int Height = 800;
 
-// There are four balls
+// There are four balls: 공 위치 배열
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
+// const float targetPos[54][2]; // 부셔야 되는 벽돌 공 위치
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE};
 
 // -----------------------------------------------------------------------------
 // Transform matrices
 // -----------------------------------------------------------------------------
+//
 D3DXMATRIX g_mWorld;
 D3DXMATRIX g_mView;
 D3DXMATRIX g_mProj;
@@ -51,6 +53,7 @@ private :
     float                   m_radius;
 	float					m_velocity_x;
 	float					m_velocity_z;
+	bool					isHittedBall = false; // 민병록이 생성.
 
 public:
     CSphere(void)
@@ -65,6 +68,12 @@ public:
     ~CSphere(void) {}
 
 public:
+	void setIsHittedBall() { // 민병록이 생성
+		this->isHittedBall = true;
+	}
+	bool getIsHittedBall() { // 민병록이 생성
+		return this->isHittedBall;
+	}
     bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE)
     {
         if (NULL == pDevice)
@@ -102,6 +111,10 @@ public:
     bool hasIntersected(CSphere& ball) 
 	{
 		// Insert your code here.
+		float distance = 0;
+		distance = sqrt((this->center_x - ball.center_x) * (this->center_x - ball.center_x) + (this->center_z - ball.center_z) * (this->center_z - ball.center_z));
+
+		if (distance <= ball.m_radius) return true;
 
 		return false;
 	}
@@ -109,6 +122,22 @@ public:
 	void hitBy(CSphere& ball) 
 	{ 
 		// Insert your code here.
+		if (hasIntersected(ball)) {
+			float deltaX = ball.getCenter().x - this->getCenter().x;
+			float deltaZ = ball.getCenter().x - this->getCenter().y;
+
+			float deltaVelocityVector = sqrt(ball.getVelocity_X() * ball.getVelocity_X() + ball.getVelocity_Z() * ball.getVelocity_Z());
+			float direcVal = sqrt(deltaX * deltaX + deltaZ * deltaZ);
+
+			float scale = deltaVelocityVector / direcVal;
+
+			ball.setPower(scale * deltaX, scale * deltaZ);
+
+			//..?
+
+
+			
+		}
 	}
 
 	void ballUpdate(float timeDiff) 
@@ -213,7 +242,7 @@ public:
         m_mtrl.Diffuse  = color;
         m_mtrl.Specular = color;
         m_mtrl.Emissive = d3d::BLACK;
-        m_mtrl.Power    = 5.0f;
+        m_mtrl.Power    = 20.0f; // 민병록이 수정
 		
         m_width = iwidth;
         m_depth = idepth;
@@ -242,12 +271,34 @@ public:
 	bool hasIntersected(CSphere& ball) 
 	{
 		// Insert your code here.
+		float right_wall_x = m_x + m_width / 2;
+		float left_wall_x = m_x - m_width / 2;
+		float top_wall_z = m_z + m_height / 2;
+		float bottom_wall_z = m_z - m_height / 2;
+
+		D3DXVECTOR3 temp = ball.getCenter();
+
+		if (temp.x == right_wall_x || temp.x == left_wall_x || temp.z == top_wall_z || temp.z == bottom_wall_z) return true;
+
 		return false;
 	}
 
-	void hitBy(CSphere& ball) 
+	void hitBy(CSphere& ball) // 민병록이 수정
 	{
 		// Insert your code here.
+		// 진행 방향의 반대로 공을 보냄.
+		//왼쪽, 오른쪽 벽은 X좌표를 & 위쪽 벽은 x좌표를 바꿔줘야 한다. 
+		if (hasIntersected(ball)) {
+			if (this->m_x == 0) {
+				float deltaZ = ball.getVelocity_Z() - this->m_z;
+				float deltaVelocityVector = sqrt(ball.getVelocity_X() * ball.getVelocity_X() + ball.getVelocity_Z() * ball.getVelocity_Z());
+				ball.setPower(ball.getVelocity_X(), -ball.getVelocity_Z());
+			}
+			else {
+				float deltaVelocityVector = sqrt(ball.getVelocity_X() * ball.getVelocity_X() + ball.getVelocity_Z() * ball.getVelocity_Z());
+				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
+			}
+		}
 	}    
 	
 	void setPosition(float x, float y, float z)
@@ -429,7 +480,7 @@ bool Setup()
         return false;
 	
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(0.0f, 5.0f, -8.0f);
+	D3DXVECTOR3 pos(5.0f, 13.0f, 0.0f);
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
