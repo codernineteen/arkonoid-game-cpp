@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cassert>
 #include <iostream>
+#include <cmath>
 
 IDirect3DDevice9* Device = NULL;
 
@@ -126,16 +127,29 @@ public:
 		m_pSphereMesh->DrawSubset(0);
     }
 	
-    bool hasIntersected(CSphere& ball) 
+   /* bool hasIntersected(CSphere& ball) 
 	{
-		// Insert your code here.
+		D3DXVECTOR3 current_ball_pos = ball.getCenter();
+		double distance = sqrt(pow(current_ball_pos.x - center_x, 2) + pow(current_ball_pos.z - center_z, 2));
+		if (distance < 0.42)
+		{
+			return true;
+		}
 
 		return false;
-	}
+	}*/
 	
 	void hitBy(CSphere& ball) 
 	{ 
-		// Insert your code here.
+		D3DXVECTOR3 current_ball_pos = ball.getCenter();
+		double deltaX = current_ball_pos.x - center_x;
+		double deltaZ = current_ball_pos.z - center_z;
+		double distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
+		if (distance < 0.5)
+		{
+			double hitAngle = acosf(deltaX / distance); // arccos
+			this->setPower(m_velocity_x*sin(hitAngle), m_velocity_z*cos(hitAngle));
+		}		
 	}
 
 	void ballUpdate(float timeDiff) 
@@ -282,23 +296,12 @@ public:
 
 	//	return false;
 	//}
-
-	void hitBy(CSphere& ball) 
+	
+	// Display에 따로 구현
+	/*void hitBy(CSphere& ball) 
 	{
-		D3DXVECTOR3 current_ball_pos = ball.getCenter();
-		double current_velocity_z = ball.getVelocity_Z();
-		double current_velocity_x = ball.getVelocity_X();
 
-		if ((current_ball_pos.z + 0.21) >= 2.8 || (current_ball_pos.z - 0.21) <= -2.8)
-		{
-			ball.setPower(current_velocity_x*-1, current_velocity_z);
-		}
-
-		if ((current_ball_pos.x + 0.21) >= 4.5)
-		{
-			ball.setPower(current_velocity_x, current_velocity_z*-1);
-		}
-	}    
+	}    */
 	
 	void setPosition(float x, float y, float z)
 	{
@@ -541,6 +544,31 @@ bool Display(float timeDelta)
 		{
 			g_target_blueball.setPower(current_velocity_x * -1, current_velocity_z);
 		}
+
+		for (int i = 0; i < 60; i++)
+		{
+			D3DXVECTOR3 targetball_pos = g_targetBall[i].getCenter();
+			double deltaX = targetball_pos.x - current_ball_pos.x;
+			double deltaZ = targetball_pos.z - current_ball_pos.z;
+			double distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
+			if (distance < 0.42)
+			{
+				double hitAngle = acosf(deltaX / distance); // arccos
+				g_target_blueball.setPower(current_velocity_x * cos(hitAngle), current_velocity_z * sin(hitAngle));
+			}
+	
+			//g_target_blueball.hitBy(g_targetBall[i]);
+		}
+
+		D3DXVECTOR3 whiteball_pos = g_plate_whiteball.getCenter();
+		double deltaX = whiteball_pos.x - current_ball_pos.x;
+		double deltaZ = whiteball_pos.z - current_ball_pos.z;
+		double distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
+		if (distance < 0.42)
+		{
+			double hitAngle = acosf(deltaX / distance); // arccos
+			g_target_blueball.setPower(current_velocity_x * sin(hitAngle), current_velocity_z * cos(hitAngle));
+		}
 	
 
 
@@ -573,7 +601,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static int old_x = 0;
 	static int old_y = 0;
 	static enum { WORLD_MOVE, LIGHT_MOVE, BLOCK_MOVE } move = WORLD_MOVE;
-	static const double VELOCITY = -2; //속도 설정
+	static const double VELOCITY = -0.8; //속도 설정
 	static bool isGameStarted = false; //게임 시작 판정
 
 	D3DXVECTOR3 current_center_white = g_plate_whiteball.getCenter(); // 현재 받침 공 위치 받아오기
