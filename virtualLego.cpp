@@ -24,8 +24,8 @@
 IDirect3DDevice9* Device = NULL;
 
 // window size
-const int Width  = 512;
-const int Height = 1024;
+const int Width  = 480;
+const int Height = 720;
 
 //공 위치 배열: 위치 배열 { 좌표 배열 {} } 
 const float spherePos[60][2] = {
@@ -51,6 +51,7 @@ const float spherePos[60][2] = {
 	//cross line-vertical
 	{1.7, 0}, {1.4, 0}, {0.98, 0}, {0.56, 0}, {0.14, 0},{-0.28, 0},
 	{-0.7, 0}, {-1.12, 0}, {-1.54, 0},{-1.96, 0},{-2.34, 0},{-2.64, 0},
+
 	//cross line-horizontal
 	{-0.28,0.42} , {-0.28,0.84} , {-0.28, 1.26} , {-0.28, 1.68},
 	{-0.28,-0.42} , {-0.28,-0.84} , {-0.28,-1.26} , {-0.28, -1.68}
@@ -129,28 +130,36 @@ public:
 		m_pSphereMesh->DrawSubset(0);
 	}
 
-	/* bool hasIntersected(CSphere& ball)
-	 {
-		 D3DXVECTOR3 current_ball_pos = ball.getCenter();
-		 double distance = sqrt(pow(current_ball_pos.x - center_x, 2) + pow(current_ball_pos.z - center_z, 2));
-		 if (distance < 0.42)
-		 {
-			 return true;
-		 }
-		 return false;
-	 }*/
-
-	void hitBy(CSphere& ball)
+	bool hitBy(CSphere& ball)
 	{
-		D3DXVECTOR3 current_ball_pos = ball.getCenter();
-		double deltaX = current_ball_pos.x - center_x;
-		double deltaZ = current_ball_pos.z - center_z;
+		D3DXVECTOR3 targetball_pos = ball.getCenter();
+		double deltaX = targetball_pos.x - center_x;
+		double deltaZ = targetball_pos.z - center_z;
 		double distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
-		if (distance < 0.5)
-		{
-			double hitAngle = acosf(deltaX / distance); // arccos
-			this->setPower(m_velocity_x * sin(hitAngle), m_velocity_z * cos(hitAngle));
+
+		if (distance <= 0.42) {
+			double hitAngle = acosf(deltaX / distance);
+			double total_velocity = sqrt(m_velocity_x * m_velocity_x + m_velocity_z  * m_velocity_z);
+			if (targetball_pos.z <= center_z) {
+				if (hitAngle <= 0.785398) {
+					this->setPower(-m_velocity_x, m_velocity_z);
+				}
+				else if (hitAngle > 0.785398) {
+					this->setPower(m_velocity_x, -m_velocity_z);
+				}
+			}
+			else if (targetball_pos.z >= center_z) {
+				if (hitAngle <= 0.785398) {
+					this->setPower(m_velocity_x, -m_velocity_z);
+				}
+				else if (hitAngle > 0.785398) {
+					this->setPower(-m_velocity_x, m_velocity_z);
+				}
+			}
+			return true;
 		}
+
+		return false;
 	}
 
 	void ballUpdate(float timeDiff)
@@ -168,7 +177,7 @@ public:
 			//correction of position of ball
 			// 공이 벽에 부딪힐 때 공의 위치 수정이 필요하기 때문에 이 부분의 주석을 제거해주세요.
 			// 제거함
-			if(tX >= (4.5 - M_RADIUS))
+			/*if(tX >= (4.5 - M_RADIUS))
 				tX = 4.5 - M_RADIUS;
 			else if(tX <=(-4.5 + M_RADIUS))
 				tX = -4.5 + M_RADIUS;
@@ -180,10 +189,6 @@ public:
 			this->setCenter(tX, cord.y, tZ);
 		}
 		else { this->setPower(0, 0); }
-		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		/*double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
-		if(rate < 0 )
-			rate = 0;*/
 		this->setPower(getVelocity_X(), getVelocity_Z());
 	}
 
@@ -281,28 +286,6 @@ public:
 		pDevice->SetMaterial(&m_mtrl);
 		m_pBoundMesh->DrawSubset(0);
 	}
-
-	//bool hasIntersected(CSphere& ball) 
-	//{
-	//	// Insert your code here.
-	//	D3DXVECTOR3 current_ball_pos = ball.getCenter();
-	//	if ((current_ball_pos.z + 0.21) >= (m_width / 2) || (current_ball_pos.z - 0.21) <= -1*(m_width/2))
-	//	{
-	//		return true;
-	//	}
-
-	//	if ((current_ball_pos.x + 0.21) >= (m_height / 2))
-	//	{
-	//		return true;
-	//	}
-
-	//	return false;
-	//}
-
-	// Display에 따로 구현
-	/*void hitBy(CSphere& ball)
-	{
-	}    */
 
 	void setPosition(float x, float y, float z)
 	{
@@ -568,74 +551,14 @@ bool Display(float timeDelta)
 
 		for (int i = 0; i < 60; i++)
 		{
-			D3DXVECTOR3 targetball_pos = g_targetBall[i].getCenter();
-			double deltaX = targetball_pos.x - current_ball_pos.x;
-			double deltaZ = targetball_pos.z - current_ball_pos.z;
-			double distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
-			//if (distance < 0.42)
-			//{
-			//	double hitAngle = acosf(deltaX / distance); // arccos
-			//	double total_velocity = sqrt(g_target_blueball.getVelocity_X() * g_target_blueball.getVelocity_X() + g_target_blueball.getVelocity_Z() * g_target_blueball.getVelocity_Z());
-			//	g_target_blueball.setPower(total_velocity * sin(hitAngle), total_velocity * cos(hitAngle));
-			//	g_targetBall[i].setCenter(100.0f, 0.0f, 100.0f);
-			//}
-			if (distance <= 0.42) {
-				double hitAngle = acosf(deltaX / distance);
-				double total_velocity = sqrt(g_target_blueball.getVelocity_X() * g_target_blueball.getVelocity_X() + g_target_blueball.getVelocity_Z() * g_target_blueball.getVelocity_Z());
-				if (targetball_pos.z <= current_ball_pos.z) {
-					if (hitAngle <= 0.785398) {
-						g_target_blueball.setPower(-current_velocity_x, current_velocity_z);
-						g_targetBall[i].setCenter(100.0f, 0.0f, 100.0f);
-					}
-					else if (hitAngle > 0.785398) {
-						g_target_blueball.setPower(current_velocity_x, -current_velocity_z);
-						g_targetBall[i].setCenter(100.0f, 0.0f, 100.0f);
-					}
-				}
-				else if (targetball_pos.z >= current_ball_pos.z) {
-					if (hitAngle <= 0.785398) {
-						g_target_blueball.setPower(current_velocity_x, -current_velocity_z);
-						g_targetBall[i].setCenter(100.0f, 0.0f, 100.0f);
-					}
-					else if (hitAngle > 0.785398) {
-						g_target_blueball.setPower(-current_velocity_x, current_velocity_z);
-						g_targetBall[i].setCenter(100.0f, 0.0f, 100.0f);
-					}
-				}
+			bool hitResult = g_target_blueball.hitBy(g_targetBall[i]);
+			if (hitResult)
+			{
+				g_targetBall[i].setCenter(100.0f, 0.0f, 100.0f);
 			}
 		}
 
-		D3DXVECTOR3 whiteball_pos = g_plate_whiteball.getCenter();
-		double deltaX = whiteball_pos.x - current_ball_pos.x;
-		double deltaZ = whiteball_pos.z - current_ball_pos.z;
-		double distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
-		//if (distance <= 0.41)
-		//{
-		//	double hitAngle = acosf(deltaX / distance); // arccos
-		//	double total_velocity = sqrt(g_target_blueball.getVelocity_X() * g_target_blueball.getVelocity_X() + g_target_blueball.getVelocity_Z() * g_target_blueball.getVelocity_Z());
-		//	g_target_blueball.setPower(total_velocity * sin(hitAngle), total_velocity * cos(hitAngle));
-		//}
-
-		if (distance <= 0.42) {
-			double hitAngle = acosf(deltaX / distance);
-			double total_velocity = sqrt(g_target_blueball.getVelocity_X() * g_target_blueball.getVelocity_X() + g_target_blueball.getVelocity_Z() * g_target_blueball.getVelocity_Z());
-			if (whiteball_pos.z <= current_ball_pos.z) {
-				if (hitAngle <= 0.785398) {
-					g_target_blueball.setPower(-current_velocity_x, current_velocity_z);
-				}
-				else if (hitAngle > 0.785398) {
-					g_target_blueball.setPower(current_velocity_x, -current_velocity_z);
-				}
-			}
-			else if (whiteball_pos.z >= current_ball_pos.z) {
-				if (hitAngle <= 0.785398) {
-					g_target_blueball.setPower(current_velocity_x, -current_velocity_z);
-				}
-				else if (hitAngle > 0.785398) {
-					g_target_blueball.setPower(-current_velocity_x, current_velocity_z);
-				}
-			}
-		}
+		g_target_blueball.hitBy(g_plate_whiteball);
 
 
 
